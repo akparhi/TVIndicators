@@ -1,0 +1,150 @@
+//@version=4
+study(title="base27 D(Super Signals)", shorttitle = "base27_D_Super_Signals")
+
+
+// Functions
+colorRed = #ef5350
+colorGreen = #26a69a
+colorGrey = #9598a1
+
+f_color(s) =>
+    sColor = colorGrey
+    if(s > 0)
+        sColor := color.new(colorGreen, 0)
+    if(s < 0)
+        sColor := color.new(colorRed, 0)
+    if(s == -1)
+        sColor := color.new(colorRed, 60)
+    if(s == 1)
+        sColor := color.new(colorGreen, 60)
+    if(s == -2)
+        sColor := color.new(colorRed, 48)
+    if(s == 2)
+        sColor := color.new(colorGreen, 48)
+    if(s == -3)
+        sColor := color.new(colorRed, 36)
+    if(s == 3)
+        sColor := color.new(colorGreen, 36)
+    if(s == -4)
+        sColor := color.new(colorRed, 24)
+    if(s == 4)
+        sColor := color.new(colorGreen, 24)
+    if(s == -5)
+        sColor := color.new(colorRed, 12)
+    if(s == 5)
+        sColor := color.new(colorGreen, 12)
+    if(s == -6)
+        sColor := color.new(colorRed, 0)
+    if(s == 6)
+        sColor := color.new(colorGreen, 0)
+    sColor
+
+//////////////////////////////////////////////////////////////////////////
+// Super Guppy
+//////////////////////////////////////////////////////////////////////////
+anchor    = input(0,minval=0,maxval=1440,title="Use Alternate Anchor TimeFrame (0=none, max=1440 (mins,D,W)")
+Lookback    = input(6, title="Alert Lookback Length")
+// If have anchor specified, calculate the base multiplier.
+mult  = timeframe.isintraday ? anchor==0 or timeframe.multiplier<=0 or timeframe.multiplier>=anchor? 1 : round(anchor/timeframe.multiplier) : 1
+mult := timeframe.isdwm? timeframe.isdaily ? (anchor==0 or timeframe.multiplier<=0 or timeframe.multiplier>=anchor or anchor<=1440 ? 1 : round(anchor/1440)) : 
+               timeframe.isweekly ? (anchor==0 or timeframe.multiplier<=0 or timeframe.multiplier>=anchor or anchor<=7200 ? 1 : round(anchor/7200)) :
+               timeframe.ismonthly ? (anchor==0 or timeframe.multiplier<=0 or timeframe.multiplier>=anchor or anchor<=30240 ? 1 : round(anchor/30240)) : 1 : mult
+
+//Fast EMA
+emaF1  = ema(close, 3*mult)
+emaF2  = ema(close, 5*mult)
+emaF3  = ema(close, 7*mult)
+emaF4  = ema(close, 9*mult)
+emaF5  = ema(close, 11*mult)
+emaF6  = ema(close, 13*mult)
+emaF7  = ema(close, 15*mult)
+emaF8  = ema(close, 17*mult)
+emaF9  = ema(close, 19*mult)
+emaF10 = ema(close, 21*mult)
+emaF11 = ema(close, 23*mult)
+emafast = (emaF1 + emaF2 + emaF3 + emaF4 + emaF5 + emaF6 + emaF7 + emaF8 + emaF9 + emaF10 + emaF11)/11
+
+//Slow EMA
+emaS1 = ema(close, 25*mult)
+emaS2 = ema(close, 28*mult)
+emaS3 = ema(close, 31*mult)
+emaS4 = ema(close, 34*mult)
+emaS5 = ema(close, 37*mult)
+emaS6 = ema(close, 40*mult)
+emaS7 = ema(close, 43*mult)
+emaS8 = ema(close, 46*mult)
+emaS9 = ema(close, 49*mult)
+emaS10 = ema(close, 52*mult)
+emaS11 = ema(close, 55*mult)
+emaS12 = ema(close, 58*mult)
+emaS13 = ema(close, 61*mult)
+emaS14 = ema(close, 64*mult)
+emaS15 = ema(close, 67*mult)
+emaS16 = ema(close, 70*mult)
+emaslow = (emaS1 + emaS2 + emaS3 + emaS4 + emaS5 + emaS6 + emaS7 + emaS8 + 
+          emaS9 + emaS10 + emaS11 + emaS12 + emaS13 + emaS14 + emaS15 + emaS16)/16
+
+//Fast EMA Color Rules
+colfastL = (emaF1 > emaF2 and emaF2 > emaF3 and emaF3 > emaF4 and emaF4 > emaF5 and emaF5 > emaF6 and emaF6 > emaF7 and emaF7 > emaF8 and emaF8 > emaF9 and emaF9 > emaF10 and emaF10 > emaF11)
+colfastS = (emaF1 < emaF2 and emaF2 < emaF3 and emaF3 < emaF4 and emaF4 < emaF5 and emaF5 < emaF6 and emaF6 < emaF7 and emaF7 < emaF8 and emaF8 < emaF9 and emaF9 < emaF10 and emaF10 < emaF11)
+//Slow EMA Color Rules
+colslowL = (emaS1 > emaS2 and emaS2 > emaS3 and emaS3 > emaS4 and emaS4 > emaS5 and emaS5 > emaS6 and emaS6 > emaS7 and emaS7 > emaS8) and
+           (emaS8 > emaS9 and emaS9 > emaS10 and emaS10 > emaS11 and emaS11 > emaS12 and emaS12 > emaS13 and emaS13 > emaS14 and emaS14 > emaS15 and emaS15 > emaS16)
+colslowS = (emaS1 < emaS2 and emaS2 < emaS3 and emaS3 < emaS4 and emaS4<emaS5 and emaS5<emaS6 and emaS6<emaS7 and emaS7<emaS8) and
+           (emaS8 < emaS9 and emaS9 < emaS10 and emaS10 < emaS11 and emaS11 < emaS12 and emaS12 < emaS13 and emaS13 < emaS14 and emaS14 < emaS15 and emaS15 < emaS16)
+
+//Fast EMA Final Color Rules
+colFinal = colfastL and emaS1 > emaS16 ? color.aqua : colfastS and emaS1 < emaS16 ? color.orange : color.gray
+//Slow EMA Final Color Rules
+colFinal2 = colslowL ? color.lime : colslowS ? color.red : color.gray
+
+// BUY & SELL
+buySwing = 0
+sellSwing = 0
+buySwing := colFinal[1] == color.gray and colFinal == color.aqua ? nz(buySwing[1]) > 0 ? buySwing[1] + 1 : 1 : 0
+sellSwing := colFinal[1] == color.gray  and colFinal == color.orange ? nz(sellSwing[1]) > 0 ? sellSwing[1] + 1 : 1 : 0
+
+// SG sIgnal
+s1 = 0
+s1  := s1[1] ? s1[1] : 0
+if (colFinal2[1] != color.lime and colFinal2 == color.lime)
+    s1 := 1
+if (s1[1] > 0 and buySwing==1 and barssince(nz(buySwing[1], 1)==1) > Lookback)
+    s1 := s1[1] + 1
+if (colFinal2[1] != color.red and colFinal2 == color.red)
+    s1 := -1
+if (s1[1] < 0 and sellSwing==1 and barssince(nz(sellSwing[1], 1)==1) > Lookback)
+    s1 := s1[1] - 1
+if((colFinal2[1] == color.lime and colFinal2 != color.lime) or (colFinal2[1] == color.red and colFinal2 != color.red))
+    s1 := 0
+
+
+// SIGNALER
+s3TopLine = plot(36, title = 'EMA(11, 34) TOP Line', transp = 100)
+s3BottomLine = plot(30, title = 'EMA(11, 34) Line', transp = 100)
+fill(s3TopLine, s3BottomLine, title = 'EMA(11, 34) Bar Colors', color = f_color(emaS4 == emaF5 ? 0 : (emaS4 < emaF5 ? 1 : -1)))
+var label3 = label.new(bar_index, 33, text = "EMA(11, 34)", 
+ style = label.style_label_left, color = color.blue, size = size.small, textcolor = color.white)
+label.set_xy(label3, bar_index, 33)
+
+s2TopLine = plot(24, title = 'EMA(slow, fast) TOP Line', transp = 100)
+s2BottomLine = plot(18, title = 'EMA(slow, fast) BOTTOM Line', transp = 100)
+fill(s2TopLine, s2BottomLine, title = 'EMA(slow, fast) Bar Colors', color = f_color(emaslow == emafast ? 0 : (emaslow < emafast ? 1 : -1)))
+var label2 = label.new(bar_index, 21, text = "EMA(slow, fast)", 
+ style = label.style_label_left, color = color.blue, size = size.small, textcolor = color.white)
+label.set_xy(label2, bar_index, 21)
+
+s1TopLine = plot(12, title = 'Guppy TOP Line', transp = 100)
+s1BottomLine = plot(6, title = 'Guppy BOTTOM Line', transp = 100)
+fill(s1TopLine, s1BottomLine, title = 'Guppy Bar Colors', color = f_color(s1))
+var label1 = label.new(bar_index, 9, text = "Super Guppy", 
+ style = label.style_label_left, color = color.blue, size = size.small, textcolor = color.white)
+label.set_xy(label1, bar_index, 9)
+
+// ALERTS
+alertcondition(cross(emaF5, emaS4), "EMA(11, 34) Signal", "EMA(11, 34) Signal")
+alertcondition(cross(emafast, emaslow), "EMA(slow, fast) Signal", "EMA(slow, fast) Signal")
+alertcondition(colFinal2[1] != color.lime and colFinal2 == color.lime, "SG - Long Start", "SG - Long Start")
+alertcondition(colFinal2[1] == color.lime and colFinal2 != color.lime, "SG - Long Stop", "SG - Long Stop")
+alertcondition(colFinal2[1] != color.red and colFinal2 == color.red, "SG - Short Start", "SG - Short Start")
+alertcondition(colFinal2[1] == color.red and colFinal2 != color.red, "SG - Short Stop", "SG - Short Stop")

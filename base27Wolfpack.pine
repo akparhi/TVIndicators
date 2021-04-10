@@ -1,0 +1,16 @@
+//@version=4
+study("Wolfpack Test", shorttitle="Wolfpack Test")
+
+f_wolfpack(_src)=>
+    pmo = ema(10 * ema(nz(roc(_src, 1)), 5), 5)
+    ema(pmo, 1)
+
+tf = input("30", title = "Timeframe", type = input.resolution, options = ["1", "3", "5", "15", "30", "60","120", "240","360","720", "D", "W"])
+
+wolfpack1 = f_wolfpack(security(syminfo.tickerid, timeframe.period, close))
+wolfpack2 = f_wolfpack(security(syminfo.tickerid, tf, close))
+
+hline(0, title="Zero Line", linestyle=plot.style_line)
+plot(wolfpack1, title="Signal1", color=wolfpack1 > 0 ? #00ff00 : #ff0000, linewidth=2, transp=0)
+
+bgcolor(color=wolfpack2 > 0 ? #00ff00 : #ff0000, transp=97)

@@ -1,0 +1,141 @@
+//@version=4
+study("base27 C(Super Guppy)", shorttitle="base27_C_Super_Guppy", overlay=true)
+
+Lookback    = input(6, title="Alert Lookback Length")
+showEma1134 = input(true, title="Highlight EMA(11, 34) line")
+showSignal = input(true, title="Show SG signals")
+
+//Fast EMAs
+lenF1  = input(3, minval=1, title="Fast EMA 1")
+lenF2  = input(5, minval=1, title="Fast EMA 2")
+lenF3  = input(7, minval=1, title="Fast EMA 3")
+lenF4  = input(9, minval=1, title="Fast EMA 4")
+lenF5  = input(11, minval=1, title="Fast EMA 5")
+lenF6  = input(13, minval=1, title="Fast EMA 6")
+lenF7  = input(15, minval=1, title="Fast EMA 7")
+lenF8  = input(17, minval=1, title="Fast EMA 8")
+lenF9  = input(19, minval=1, title="Fast EMA 9")
+lenF10 = input(21, minval=1, title="Fast EMA 10")
+lenF11 = input(23, minval=1, title="Fast EMA 11")
+
+//Slow EMAs
+lenS1  = input(25, minval=1, title="Slow EMA 1")
+lenS2  = input(28, minval=1, title="Slow EMA 2")
+lenS3  = input(31, minval=1, title="Slow EMA 3")
+lenS4  = input(34, minval=1, title="Slow EMA 4")
+lenS5  = input(37, minval=1, title="Slow EMA 5")
+lenS6  = input(40, minval=1, title="Slow EMA 6")
+lenS7  = input(43, minval=1, title="Slow EMA 7")
+lenS8  = input(46, minval=1, title="Slow EMA 8")
+lenS9  = input(49, minval=1, title="Slow EMA 9")
+lenS10 = input(52, minval=1, title="Slow EMA 10")
+lenS11 = input(55, minval=1, title="Slow EMA 11")
+lenS12 = input(58, minval=1, title="Slow EMA 12")
+lenS13 = input(61, minval=1, title="Slow EMA 13")
+lenS14 = input(64, minval=1, title="Slow EMA 14")
+lenS15 = input(67, minval=1, title="Slow EMA 15")
+lenS16 = input(70, minval=1, title="Slow EMA 16")
+
+
+
+//Fast EMA
+emaF1  = ema(close, lenF1)
+emaF2  = ema(close, lenF2)
+emaF3  = ema(close, lenF3)
+emaF4  = ema(close, lenF4)
+emaF5  = ema(close, lenF5)
+emaF6  = ema(close, lenF6)
+emaF7  = ema(close, lenF7)
+emaF8  = ema(close, lenF8)
+emaF9  = ema(close, lenF9)
+emaF10 = ema(close, lenF10)
+emaF11 = ema(close, lenF11)
+emafast = (emaF1 + emaF2 + emaF3 + emaF4 + emaF5 + emaF6 + emaF7 + emaF8 + emaF9 + emaF10 + emaF11)/11
+
+//Slow EMA
+emaS1 = ema(close, lenS1)
+emaS2 = ema(close, lenS2)
+emaS3 = ema(close, lenS3)
+emaS4 = ema(close, lenS4)
+emaS5 = ema(close, lenS5)
+emaS6 = ema(close, lenS6)
+emaS7 = ema(close, lenS7)
+emaS8 = ema(close, lenS8)
+emaS9 = ema(close, lenS9)
+emaS10 = ema(close, lenS10)
+emaS11 = ema(close, lenS11)
+emaS12 = ema(close, lenS12)
+emaS13 = ema(close, lenS13)
+emaS14 = ema(close, lenS14)
+emaS15 = ema(close, lenS15)
+emaS16 = ema(close, lenS16)
+emaslow = (emaS1 + emaS2 + emaS3 + emaS4 + emaS5 + emaS6 + emaS7 + emaS8 + 
+          emaS9 + emaS10 + emaS11 + emaS12 + emaS13 + emaS14 + emaS15 + emaS16)/16
+
+//EMA 200
+ema200 = ema(close, 200)
+
+//Fast EMA Color Rules
+colfastL = (emaF1 > emaF2 and emaF2 > emaF3 and emaF3 > emaF4 and emaF4 > emaF5 and emaF5 > emaF6 and emaF6 > emaF7 and emaF7 > emaF8 and emaF8 > emaF9 and emaF9 > emaF10 and emaF10 > emaF11)
+colfastS = (emaF1 < emaF2 and emaF2 < emaF3 and emaF3 < emaF4 and emaF4 < emaF5 and emaF5 < emaF6 and emaF6 < emaF7 and emaF7 < emaF8 and emaF8 < emaF9 and emaF9 < emaF10 and emaF10 < emaF11)
+//Slow EMA Color Rules
+colslowL = (emaS1 > emaS2 and emaS2 > emaS3 and emaS3 > emaS4 and emaS4 > emaS5 and emaS5 > emaS6 and emaS6 > emaS7 and emaS7 > emaS8) and
+           (emaS8 > emaS9 and emaS9 > emaS10 and emaS10 > emaS11 and emaS11 > emaS12 and emaS12 > emaS13 and emaS13 > emaS14 and emaS14 > emaS15 and emaS15 > emaS16)
+colslowS = (emaS1 < emaS2 and emaS2 < emaS3 and emaS3 < emaS4 and emaS4<emaS5 and emaS5<emaS6 and emaS6<emaS7 and emaS7<emaS8) and
+           (emaS8 < emaS9 and emaS9 < emaS10 and emaS10 < emaS11 and emaS11 < emaS12 and emaS12 < emaS13 and emaS13 < emaS14 and emaS14 < emaS15 and emaS15 < emaS16)
+
+//Fast EMA Final Color Rules
+colFinal = colfastL and emaS1 > emaS16 ? color.aqua : colfastS and emaS1 < emaS16 ? color.orange : color.gray
+//Slow EMA Final Color Rules
+colFinal2 = colslowL ? color.lime : colslowS ? color.red : color.gray
+
+//Fast EMA Plots
+p1=plot(emaF1, title="Fast EMA 1", linewidth=2, color=colFinal, transp=20)
+plot(emaF2, title="Fast EMA 2", linewidth=1, color=colFinal, transp=20)
+plot(emaF3, title="Fast EMA 3", linewidth=1, color=colFinal, transp=20)
+plot(emaF4, title="Fast EMA 4", linewidth=1, color=colFinal, transp=20)
+plot(emaF5, title="Fast EMA 5", linewidth=1, color=colFinal, transp=20)
+plot(emaF6, title="Fast EMA 6", linewidth=1, color=colFinal, transp=20)
+plot(emaF7, title="Fast EMA 7", linewidth=1, color=colFinal, transp=20)
+plot(emaF8, title="Fast EMA 8", linewidth=1, color=colFinal, transp=20)
+plot(emaF9, title="Fast EMA 9", linewidth=1, color=colFinal, transp=20)
+plot(emaF10, title="Fast EMA 10", linewidth=1, color=colFinal, transp=20)
+p2=plot(emaF11, title="Fast EMA 11", linewidth=1, color=colFinal, transp=20)
+
+fill(p1,p2,color=color.silver, transp=95)
+
+//Slow EMA Plots
+p3=plot(emaS1, title="Slow EMA 1", linewidth=2, color=colFinal2, transp=20)
+plot(emaS2, title="Slow EMA 2", linewidth=1, color=colFinal2, transp=20)
+plot(emaS3, title="Slow EMA 3", linewidth=1, color=colFinal2, transp=20)
+plot(showEma1134 ? na : emaS4, title="Slow EMA 4", linewidth=1, color=colFinal2,transp=20)
+plot(showEma1134 ? emaS4 : na, title="Slow EMA 4 - EMA(11, 34)", linewidth=2, color= emaS4 < emaF5 ? color.fuchsia : #FFD700 , transp=0, style=plot.style_circles,join=true)
+plot(emaS5, title="Slow EMA 5", linewidth=1, color=colFinal2, transp=20)
+plot(emaS6, title="Slow EMA 6", linewidth=1, color=colFinal2, transp=20)
+plot(emaS7, title="Slow EMA 7", linewidth=1, color=colFinal2, transp=20)
+plot(emaS8, title="Slow EMA 8", linewidth=1, color=colFinal2, transp=20)
+plot(emaS9, title="Slow EMA 9", linewidth=1, color=colFinal2, transp=20)
+plot(emaS10, title="Slow EMA 10", linewidth=1, color=colFinal2, transp=20)
+plot(emaS11, title="Slow EMA 11", linewidth=1, color=colFinal2, transp=20)
+plot(emaS12, title="Slow EMA 12", linewidth=1, color=colFinal2, transp=20)
+plot(emaS13, title="Slow EMA 13", linewidth=1, color=colFinal2, transp=20)
+plot(emaS14, title="Slow EMA 14", linewidth=1, color=colFinal2, transp=20)
+plot(emaS15, title="Slow EMA 15", linewidth=1, color=colFinal2, transp=20)
+p4=plot(emaS16, title="Slow EMA 16", linewidth=2, color=colFinal2,transp=20)
+
+fill(p3,p4, color=color.silver, transp=95)
+plot(ema200, title="EMA 200", linewidth=2)
+
+// BUY & SELL (STRONG)
+buySwing = 0
+sellSwing = 0
+buySwing := colFinal[1] == color.gray and colFinal == color.aqua ? nz(buySwing[1]) > 0 ? buySwing[1] + 1 : 1 : 0
+sellSwing := colFinal[1] == color.gray  and colFinal == color.orange ? nz(sellSwing[1]) > 0 ? sellSwing[1] + 1 : 1 : 0
+
+
+plotshape(showSignal and buySwing==1 and barssince(nz(buySwing[1], 1)==1) > Lookback ? 1 : na, title="Buy Swing", text="SGS", location=location.belowbar, style=shape.labelup, size=size.tiny, color=color.aqua, textcolor=color.white, transp=0)
+plotshape(showSignal and sellSwing==1 and barssince(nz(sellSwing[1], 1)==1) > Lookback ? -1 : na, title="Sell Swing", text="SGS", location=location.abovebar, style=shape.labeldown, size=size.tiny, color=color.orange, textcolor=color.white, transp=0)
+plotshape(showSignal and colFinal2[1] != color.lime and colFinal2 == color.lime ? 1 : na, title="Long Start", text="SG", location=location.belowbar, style=shape.labelup, size=size.tiny, color=color.green, textcolor=color.white, transp=0)
+plotshape(showSignal and colFinal2[1] == color.lime and colFinal2 != color.lime ? 1 : na, title="Long Stop", text="SG", location=location.abovebar, style=shape.labeldown, size=size.tiny, color=color.black, textcolor=color.white, transp=0)
+plotshape(showSignal and colFinal2[1] != color.red and colFinal2 == color.red ? -1 : na, title="Short Start", text="SG", location=location.abovebar, style=shape.labeldown, size=size.tiny, color=color.red, textcolor=color.white, transp=0)
+plotshape(showSignal and colFinal2[1] == color.red and colFinal2 != color.red ? 1 : na, title="Short Stop", text="SG", location=location.belowbar, style=shape.labelup, size=size.tiny, color=color.black, textcolor=color.white, transp=0)
