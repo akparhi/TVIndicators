@@ -255,8 +255,12 @@ hbtrue := evhb?true :evlb?false :hbtrue[1] //last event mutatable
 hftrue = true
 lftrue = true
 cftrue = true
-hftrue := crossover(close, hf) ? true : crossunder(close, hf) ? false : hftrue[1] //mutatable true if in up trend
-lftrue := crossunder(close, lf) ? true : crossover(close, lf) ? false : lftrue[1] //mutatable true if in down trend
+evupin = crossover(close, hf) //market enters up trend
+evupout = crossunder(close, hf) //market leaves up trend
+hftrue := evupin? true :evupout? false :hftrue[1] //mutatable true if in up trend
+evdownin = crossunder(close, lf) //market enters down trend
+evdownout = crossover(close, lf) //market leaves down trend
+lftrue := evdownin? true :evdownout? false :lftrue[1] //mutatable true if in down trend
 cftrue := not hftrue and not lftrue? true : false    //mutatable true if instrument is ranging
 
 //IDENTIFY LAST BAR
