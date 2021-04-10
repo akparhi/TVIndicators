@@ -72,9 +72,6 @@ emaS16 = ema(close, lenS16)
 emaslow = (emaS1 + emaS2 + emaS3 + emaS4 + emaS5 + emaS6 + emaS7 + emaS8 + 
           emaS9 + emaS10 + emaS11 + emaS12 + emaS13 + emaS14 + emaS15 + emaS16)/16
 
-//EMA 200
-ema200 = ema(close, 200)
-
 //Fast EMA Color Rules
 colfastL = (emaF1 > emaF2 and emaF2 > emaF3 and emaF3 > emaF4 and emaF4 > emaF5 and emaF5 > emaF6 and emaF6 > emaF7 and emaF7 > emaF8 and emaF8 > emaF9 and emaF9 > emaF10 and emaF10 > emaF11)
 colfastS = (emaF1 < emaF2 and emaF2 < emaF3 and emaF3 < emaF4 and emaF4 < emaF5 and emaF5 < emaF6 and emaF6 < emaF7 and emaF7 < emaF8 and emaF8 < emaF9 and emaF9 < emaF10 and emaF10 < emaF11)
@@ -124,7 +121,6 @@ plot(emaS15, title="Slow EMA 15", linewidth=1, color=colFinal2, transp=20)
 p4=plot(emaS16, title="Slow EMA 16", linewidth=2, color=colFinal2,transp=20)
 
 fill(p3,p4, color=color.silver, transp=95)
-plot(ema200, title="EMA 200", linewidth=2)
 
 // BUY & SELL (STRONG)
 buySwing = 0
