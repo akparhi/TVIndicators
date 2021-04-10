@@ -420,14 +420,15 @@ plot(tcLine ? tcVal : na, color = color.new(colorGrey, 50), linewidth = 1, title
 // Draw Overbought & Oversold lines
 plot(obLevel, title = 'Over Bought Level 1', color = colorGrey, linewidth = 1, style = plot.style_cross, transp = 35)
 plot(obLevel2, title = 'Over Bought Level 2', color = colorGrey, linewidth = 1, style = plot.style_stepline, transp = 35)
+plot(obLevel3, title = 'Over Bought Level 3', color = colorGrey, linewidth = 2, style = plot.style_circles, transp = 35)
 
 plot(osLevel, title = 'Over Sold Level 1', color = colorGrey, linewidth = 1, style = plot.style_cross, transp = 35)
 plot(osLevel2, title = 'Over Sold Level 2', color = colorGrey, linewidth = 1, style = plot.style_stepline, transp = 35)
 
 // Wolfpack BAR
-wolfpackTopLine = plot(obLevel3, title = 'Wolfpack TOP Line', transp = 100)
-wolfpackBottomLine = plot(obLevel3 - 4, title = 'Wolfpack BOTTOM Line', transp = 100)
-fill(wolfpackTopLine, wolfpackBottomLine, title = 'Wolfpack Bar Colors', color = wolfpackColor, transp = 50)
+// wolfpackTopLine = plot(obLevel3, title = 'Wolfpack TOP Line', transp = 100)
+// wolfpackBottomLine = plot(obLevel3 - 4, title = 'Wolfpack BOTTOM Line', transp = 100)
+// fill(wolfpackTopLine, wolfpackBottomLine, title = 'Wolfpack Bar Colors', color = wolfpackColor, transp = 50)
 
 // Sommi flag
 // plotchar(sommiFlagShow and sommiBearish ? 108 : na, title = 'Sommi bearish flag', char='⚑', color = colorPink, location = location.absolute, size = size.tiny, transp = 0)

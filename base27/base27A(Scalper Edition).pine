@@ -35,8 +35,10 @@ ShowEMA12_Channel_ = input(true, title="Show EMA 12 Channel")
 ShowEMA12_Channel = superguppymode ? false: ShowEMA12_Channel_
 ShowEMA36_Ribbon_ = input(true, title="Show EMA 36 Ribbon")
 ShowEMA36_Ribbon = superguppymode ? false: ShowEMA36_Ribbon_
-showTrendEMAs_ = input(false, title="Show trend EMAs")
-showTrendEMAs = superguppymode ? false: showTrendEMAs_
+showFastEMA_ = input(false, title="Show fast EMA")
+showFastEMA = superguppymode ? false: showFastEMA_
+showSlowEMA_ = input(false, title="Show slow EMA")
+showSlowEMA = superguppymode ? false: showSlowEMA_
 
 // SOURCES
 close_ = close
@@ -103,9 +105,9 @@ TrendDirection = emaFast > emaMedium and pacC > emaMedium ? 1 :
 TrendeColor = TrendDirection == 1 ? colorBrightGreen : 
    TrendDirection == -1 ? colorBrightRed : colorBrightGrey
 
-plot(showTrendEMAs ? emaFast : na,  color=color.green, linewidth=3, transp=20, title="EMA fast")
+plot(showFastEMA ? emaFast : na,  color=color.green, linewidth=3, transp=20, title="EMA fast")
 plot(emaMedium, color=TrendeColor, linewidth=3, transp=20, title="EMA medium")
-plot(showTrendEMAs ? emaSlow : na, color=color.black, linewidth=3, transp=20, title="EMA slow")
+plot(showSlowEMA ? emaSlow : na, color=color.black, linewidth=3, transp=20, title="EMA slow")
 
 // Draw the EMA36 ribbon
 plot( ShowEMA36_Ribbon ? EMA12 : na, color=maColor(EMA12, EMA12, EMA36), title="MA12", linewidth=2, transp=20)
