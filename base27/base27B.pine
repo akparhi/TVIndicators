@@ -7,24 +7,6 @@
 //    - GOLD/ORANGE CIRCLE: When RSI is below 20, WaveTrend waves are below or equal to -80 and have crossed up after good bullish divergence (DONT BUY WHEN GOLD CIRCLE APPEAR).
 //    - None of these circles are certain signs to trade. It is only information that can help you. 
 //    - PURPLE TRIANGLE: Appear when a bullish or bearish divergence is formed and WaveTrend waves crosses at overbought and oversold points.
-//
-//  NOTES:
-//    - I am not an expert trader or know how to program pine script as such, in fact it is my first indicator only to study and all the code is copied and modified from other codes that are published in TradingView.
-//    - I am very grateful to the entire TV community that publishes codes so that other newbies like me can learn and present their results. This is an attempt to imitate Market Cipher B. 
-//    - Settings by default are for 4h timeframe, divergences are more stronger and accurate. Haven't tested in all timeframes, only 2h and 4h.
-//    - If you get an interesting result in other timeframes I would be very grateful if you would comment your configuration to implement it or at least check it.
-//
-//  CONTRIBUTIONS:
-//    - Tip/Idea: Add higher timeframe analysis for bearish/bullish patterns at the current timeframe.
-//    + Bearish/Bullish FLAG:
-//      - MFI+RSI Area are RED (Below 0).
-//      - Wavetrend waves are above 0 and crosses down.
-//      - VWAP Area are below 0 on higher timeframe.
-//      - This pattern reversed becomes bullish.
-//    - Tip/Idea: Check the last heikinashi candle from 2 higher timeframe
-//    + Bearish/Bullish DIAMOND:
-//      - HT Candle is red
-//      - WT > 0 and crossed down
 
 study(title = "base27 B", shorttitle = 'base27_B')
 
