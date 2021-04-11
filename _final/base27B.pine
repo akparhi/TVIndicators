@@ -452,6 +452,7 @@ plotchar(wtGoldBuy and wtGoldShow ? -106 : na, title = 'Gold  buy gold circle', 
 
 
 // ALERTS
+alertcondition(cross(wolfpack, 0), 'Wolfpack Signal', 'Wolfpack Signal')
 // BUY
 alertcondition(buySignal, 'Buy (Big green circle)', 'Green circle WaveTrend Oversold')
 alertcondition(buySignalDiv, 'Buy (Big green circle + Div)', 'Buy & WT Bullish Divergence & WT Overbought')
