@@ -88,7 +88,7 @@ C=plot(ShowPAC ? pacC : na, color=color.lime, linewidth=1, title="Close PAC EMA"
 fill(L, U, color=color.gray, transp=92, title="Fill HiLo PAC")
 
 // Colour bars according to the close position relative to the PAC selected.
-bColour     = close >= pacU ? color.lime : close <= pacL ? color.red : colorBrightGrey
+bColour     = close >= pacU ? #26a69a : close <= pacL ? #ef5350 : #b2b5be
 barcolor(scolor ? bColour : na, title = "Bar Colours")
 
 // Draw the EMA12 ribbon
@@ -284,35 +284,46 @@ plb = plot(superguppymode or lbdtrue ? na : lb, title="low border", transp= 100)
 fill(phb, phf, color= hftrue ? color.new(colorMutedGreen, 90) : color.new(colorMutedGreen, 97), title="up trend zone") //up trend zone, blue or transparant blue
 fill(plf, plb, color= lftrue ? color.new(colorMutedRed, 90) : color.new(colorMutedRed, 97), title="down trend zone")   //down trend zone, orange or transparant orange
 
-// === PREDICTION ===
-//expected levels
-tol=atr(dftPeriod) * 0.2
-schigh = hb
-schigh := hbdtrue? hb :lbdtrue? lf :chfdtrue ? hf :clfdtrue? chf :na //situation candle high
-sclow = lb
-sclow := hbdtrue? hf :lbdtrue? lb :chfdtrue ? clf :clfdtrue? lf :na //situation candle low
+//////////////////////////////////////////////////////////////////////////
+// RANGE FILTER, optimised for 5min
+//////////////////////////////////////////////////////////////////////////
+hideRFSignals = input(false, title="Hide RF signals")
+period = input(defval=100, minval=1, title="RF Sampling Period")
+mult = input(defval=2.0, minval=0.1, title="RF Multiplier")
 
-//prediction levels
-pred = atr(dftPeriod)
-prcahigh = med
-prcahigh := hbdtrue and (evpup or evpup[1]) ? hb+pred :na //prediction level higher than high border
-prcalow = med
-prcalow :=  lbdtrue and (evpdown or evpdown[1])? lb-pred :na //prediction level lower than low border
+// Smooth Average Range
+smoothrng(x, t, m)=>
+    wper      = (t*2) - 1
+    avrng     = ema(abs(x - x[1]), t)
+    smoothrng = ema(avrng, wper)*m
+    smoothrng
 
-//plot future circle markers
-plotshape(not superguppymode and hbdtrue?hb:na, style=shape.circle, location=location.absolute, color=color.blue, offset=1, size=size.tiny)
-plotshape(not superguppymode and lbdtrue?lb:na, style=shape.circle, location=location.absolute, color=color.red, offset=1, size=size.tiny)
-plotshape(not superguppymode and chfdtrue?chf:na, style=shape.circle, location=location.absolute, color=color.green, offset=1, size=size.tiny)
-plotshape(not superguppymode and clfdtrue?clf:na, style=shape.circle, location=location.absolute, color=color.maroon, offset=1, size=size.tiny)
+smrng = smoothrng(close, period, mult)
 
-//plot expected range levels
-plot(superguppymode ? na : schigh, linewidth = 5, title=" expect", color=color.teal, offset=3)
-plot(superguppymode ? na : sclow, linewidth = 5, title=" expect", color=color.teal, offset=3)
+// Range Filter
+rngfilt(x, r)=>
+    rngfilt  = x
+    rngfilt := x > nz(rngfilt[1]) ? ((x - r) < nz(rngfilt[1]) ? nz(rngfilt[1]) : (x - r)) : ((x + r) > nz(rngfilt[1]) ? nz(rngfilt[1]) : (x + r))
+    rngfilt
+filt = rngfilt(close, smrng)
 
-// plot prediction levels 
-plot(not superguppymode and last and (evpup or evpup[1]) ? prcahigh :na, style = plot.style_cross, title=" predict", linewidth = 4, color = color.blue, offset=3)
-plot(not superguppymode and last and (evpdown or evpdown[1]) ? prcalow :na, style = plot.style_cross, title=" predict", linewidth = 4, color = color.red, offset=3)
+// Filter Direction
+upward   = 0.0
+upward  := filt > filt[1] ? nz(upward[1]) + 1 : filt < filt[1] ? 0 : nz(upward[1])
+downward = 0.0
+downward := filt < filt[1] ? nz(downward[1]) + 1 : filt > filt[1] ? 0 : nz(downward[1])
 
-//plot predictionmarkers
-plotshape(not superguppymode and hbdtrue and (evpup or evpup[1]) ? hb + tol :na, style=shape.diamond, location=location.absolute, color=color.blue, size=size.tiny, offset=3)
-plotshape(not superguppymode and lbdtrue and (evpdown or evpdown[1]) ? lb - tol :na, style=shape.diamond, location=location.absolute, color=color.red, size=size.tiny, offset=3)
+// Break Outs
+longCond = bool(na)
+shortCond = bool(na)
+longCond := ((close > filt) and (close > close[1]) and (upward > 0)) or ((close > filt) and (close < close[1]) and (upward > 0)) 
+shortCond := ((close < filt) and (close < close[1]) and (downward > 0)) or ((close < filt) and (close > close[1]) and (downward > 0))
+
+CondIni = 0
+CondIni := longCond ? 1 : shortCond ? -1 : CondIni[1]
+longCondition = longCond and CondIni[1] == -1
+shortCondition = shortCond and CondIni[1] == 1
+
+// Plots & Alerts
+plotshape(hideRFSignals ? na : longCondition, title = "RF: Buy Signal", text ="B", textcolor = color.white, style=shape.labelup, size = size.tiny, location=location.belowbar, color = color.lime, transp = 0)
+plotshape(hideRFSignals ? na : shortCondition, title = "RF: Sell Signal", text ="S", textcolor = color.white, style=shape.labeldown, size = size.tiny, location=location.abovebar, color = color.orange, transp = 0)
