@@ -2,7 +2,6 @@
 study("base27 C(Super Guppy)", shorttitle="base27_C_Super_Guppy", overlay=true)
 
 Lookback    = input(6, title="Alert Lookback Length")
-showEma1134 = input(true, title="Highlight EMA(11, 34) line")
 showSignal = input(true, title="Show SG signals")
 scalpMode = input(false, title="Scalp Mode")
 
@@ -106,8 +105,7 @@ fill(p1,p2,color=color.silver, transp=95)
 p3=plot(scalpMode ? na : emaS1, title="Slow EMA 1", linewidth=2, color=colFinal2, transp=20)
 plot(scalpMode ? na : emaS2, title="Slow EMA 2", linewidth=1, color=colFinal2, transp=20)
 plot(scalpMode ? na : emaS3, title="Slow EMA 3", linewidth=1, color=colFinal2, transp=20)
-plot(scalpMode ? na : showEma1134 ? na : emaS4, title="Slow EMA 4", linewidth=1, color=colFinal2,transp=20)
-plot(scalpMode ? na : showEma1134 ? emaS4 : na, title="Slow EMA 4 - EMA(11, 34)", linewidth=2, color= emaS4 < emaF5 ? color.fuchsia : #FFD700 , transp=0, style=plot.style_circles,join=true)
+plot(scalpMode ? na : emaS4, title="Slow EMA 4 - EMA(11, 34)", linewidth=2, color= emaS4 < emaF5 ? color.fuchsia : #FFD700 , transp=0, style=plot.style_circles,join=true)
 plot(scalpMode ? na : emaS5, title="Slow EMA 5", linewidth=1, color=colFinal2, transp=20)
 plot(scalpMode ? na : emaS6, title="Slow EMA 6", linewidth=1, color=colFinal2, transp=20)
 plot(scalpMode ? na : emaS7, title="Slow EMA 7", linewidth=1, color=colFinal2, transp=20)
@@ -130,9 +128,14 @@ buySwing := colFinal[1] == color.gray and colFinal == color.aqua ? nz(buySwing[1
 sellSwing := colFinal[1] == color.gray  and colFinal == color.orange ? nz(sellSwing[1]) > 0 ? sellSwing[1] + 1 : 1 : 0
 
 
-plotshape(showSignal and buySwing==1 and barssince(nz(buySwing[1], 1)==1) > Lookback ? 1 : na, title="Buy Swing", text="SGS", location=location.belowbar, style=shape.labelup, size=size.tiny, color=color.aqua, textcolor=color.white, transp=0)
-plotshape(showSignal and sellSwing==1 and barssince(nz(sellSwing[1], 1)==1) > Lookback ? -1 : na, title="Sell Swing", text="SGS", location=location.abovebar, style=shape.labeldown, size=size.tiny, color=color.orange, textcolor=color.white, transp=0)
-plotshape(showSignal and colFinal2[1] != color.lime and colFinal2 == color.lime ? 1 : na, title="Long Start", text="SG", location=location.belowbar, style=shape.labelup, size=size.tiny, color=color.green, textcolor=color.white, transp=0)
-plotshape(showSignal and colFinal2[1] == color.lime and colFinal2 != color.lime ? 1 : na, title="Long Stop", text="SG", location=location.abovebar, style=shape.labeldown, size=size.tiny, color=color.black, textcolor=color.white, transp=0)
-plotshape(showSignal and colFinal2[1] != color.red and colFinal2 == color.red ? -1 : na, title="Short Start", text="SG", location=location.abovebar, style=shape.labeldown, size=size.tiny, color=color.red, textcolor=color.white, transp=0)
-plotshape(showSignal and colFinal2[1] == color.red and colFinal2 != color.red ? 1 : na, title="Short Stop", text="SG", location=location.belowbar, style=shape.labelup, size=size.tiny, color=color.black, textcolor=color.white, transp=0)
+plotshape(showSignal and buySwing==1 and barssince(nz(buySwing[1], 1)==1) > Lookback ? 1 : na, title="Buy Swing", text="LE", location=location.belowbar, style=shape.labelup, size=size.tiny, color=color.aqua, textcolor=color.white, transp=0)
+plotshape(showSignal and sellSwing==1 and barssince(nz(sellSwing[1], 1)==1) > Lookback ? -1 : na, title="Sell Swing", text="SE", location=location.abovebar, style=shape.labeldown, size=size.tiny, color=color.orange, textcolor=color.white, transp=0)
+plotshape(showSignal and colFinal2[1] != color.lime and colFinal2 == color.lime ? 1 : na, title="Long Start", text="LS", location=location.belowbar, style=shape.labelup, size=size.tiny, color=color.green, textcolor=color.white, transp=0)
+plotshape(showSignal and colFinal2[1] == color.lime and colFinal2 != color.lime ? 1 : na, title="Long Stop", text="LS", location=location.abovebar, style=shape.labeldown, size=size.tiny, color=color.black, textcolor=color.white, transp=0)
+plotshape(showSignal and colFinal2[1] != color.red and colFinal2 == color.red ? -1 : na, title="Short Start", text="SS", location=location.abovebar, style=shape.labeldown, size=size.tiny, color=color.red, textcolor=color.white, transp=0)
+plotshape(showSignal and colFinal2[1] == color.red and colFinal2 != color.red ? 1 : na, title="Short Stop", text="SS", location=location.belowbar, style=shape.labelup, size=size.tiny, color=color.black, textcolor=color.white, transp=0)
+
+alertcondition(colFinal2[1] != color.lime and colFinal2 == color.lime, "SG - Long Start", "SG - Long Start")
+alertcondition(colFinal2[1] == color.lime and colFinal2 != color.lime, "SG - Long Stop", "SG - Long Stop")
+alertcondition(colFinal2[1] != color.red and colFinal2 == color.red, "SG - Short Start", "SG - Short Start")
+alertcondition(colFinal2[1] == color.red and colFinal2 != color.red, "SG - Short Stop", "SG - Short Stop")

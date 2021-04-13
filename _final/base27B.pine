@@ -10,6 +10,9 @@
 
 study(title = "base27 B", shorttitle = 'base27_B')
 
+// Wolfpack Anchor
+anchor = input(2, minval=2, title="Wolfpack anchor")
+
 // WaveTrend
 wtShow = input(true, title = 'Show WaveTrend', type = input.bool)
 wtBuyShow = input(true, title = 'Show Buy dots', type = input.bool)
@@ -43,7 +46,7 @@ wtDivOBLevel_add = input(15, title = 'WT 2nd Bearish Divergence', type = input.i
 wtDivOSLevel_add = input(-40, title = 'WT 2nd Bullish Divergence 15 min', type = input.integer)
 
 // RSI+MFI
-rsiMFIShow = input(false, title = 'Show MFI', type = input.bool)
+rsiMFIShow = input(true, title = 'Show MFI', type = input.bool)
 rsiMFIperiod = input(175,title = 'MFI Period', type = input.integer)
 rsiMFIMultiplier = input(190, title = 'MFI Area multiplier', type = input.float)
 rsiMFIPosY = input(1, title = 'MFI Area Y Pos', type = input.float)
@@ -133,10 +136,6 @@ colormacdWT2c = #132213
 colormacdWT2d = #770000
 
 // FUNCTIONS
-// Wolfpack
-f_wolfpack(_src)=>
-    pmo = ema(10 * ema(nz(roc(_src, 1)), 5), 5)
-    ema(pmo, 1)
 // Divergences 
 f_top_fractal(src) => src[4] < src[2] and src[3] < src[2] and src[2] > src[1] and src[2] > src[0]
 f_bot_fractal(src) => src[4] > src[2] and src[3] > src[2] and src[2] < src[1] and src[2] < src[0]
@@ -271,8 +270,10 @@ f_findSommiDiamond(tf, tf2, wt1, wt2, wtCross, wtCrossUp, wtCrossDown) =>
 
 // CALCULATE INDICATORS
 // wolfpack
-wolfpack = f_wolfpack(close)
-wolfpackColor = wolfpack > 0 ? #3ee145 : #ff3d2e
+[wolfpack, q1, r1] = macd(close, 3, 8, 21)
+[wolfpack2, q2, r2] =  macd(close, 3 * anchor, 8 * anchor, 21)
+wolfpack2Color = wolfpack2 > 0 ? #3ee145 : #ff3d2e
+
 // RSI
 rsi = rsi(rsiSRC, rsiLen)
 rsiColor = rsi <= rsiOversold ? colorGreen : rsi >= rsiOverbought ? colorRed : colorPurple
@@ -420,15 +421,14 @@ plot(tcLine ? tcVal : na, color = color.new(colorGrey, 50), linewidth = 1, title
 // Draw Overbought & Oversold lines
 plot(obLevel, title = 'Over Bought Level 1', color = colorGrey, linewidth = 1, style = plot.style_cross, transp = 35)
 plot(obLevel2, title = 'Over Bought Level 2', color = colorGrey, linewidth = 1, style = plot.style_stepline, transp = 35)
-plot(rsiMFIShow ? na : obLevel3, title = 'Over Bought Level 3', color = colorGrey, linewidth = 2, style = plot.style_circles, transp = 35)
 
 plot(osLevel, title = 'Over Sold Level 1', color = colorGrey, linewidth = 1, style = plot.style_cross, transp = 35)
 plot(osLevel2, title = 'Over Sold Level 2', color = colorGrey, linewidth = 1, style = plot.style_stepline, transp = 35)
 
 // Wolfpack BAR
-wolfpackTopLine = plot(rsiMFIShow ? obLevel3 : na, title = 'Wolfpack TOP Line', transp = 100)
-wolfpackBottomLine = plot(rsiMFIShow ? obLevel3 - 4 : na, title = 'Wolfpack BOTTOM Line', transp = 100)
-fill(wolfpackTopLine, wolfpackBottomLine, title = 'Wolfpack Bar Colors', color = wolfpackColor, transp = 50)
+wolfpackTopLine = plot(obLevel3, title = 'Wolfpack TOP Line', transp = 100)
+wolfpackBottomLine = plot(obLevel3 - 4, title = 'Wolfpack BOTTOM Line', transp = 100)
+fill(wolfpackTopLine, wolfpackBottomLine, title = 'Wolfpack Bar Colors', color = wolfpack2Color, transp = 50)
 
 // Sommi flag
 // plotchar(sommiFlagShow and sommiBearish ? 108 : na, title = 'Sommi bearish flag', char='⚑', color = colorPink, location = location.absolute, size = size.tiny, transp = 0)

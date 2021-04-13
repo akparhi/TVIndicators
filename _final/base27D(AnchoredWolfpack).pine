@@ -1,0 +1,23 @@
+//@version=4
+study("Base27's Anchored Wolfpack", shorttitle="base27_Anchored_Wolfpack")
+
+anchor = input(5, minval=2, title="Alternate anchor")
+hmaSens = input(14, minval=2, title="HMA sens")
+slowLen = input(3, title = 'MACD Fast Length', type = input.integer)
+fastLen = input(8, title = 'MACD Slow Length', type = input.integer)
+updateBarColor = input(true, title = 'Update bar color', type = input.bool)
+
+
+zeroLine = plot(0, title = "Zero line", linewidth = 1, color = color.black)
+
+[wolfpack1, q1, r1] = macd(close, slowLen, fastLen, 21)
+[wolfpack2, q2, r2] =  macd(close, slowLen * anchor, fastLen * anchor, 21)
+hma0 = hma(close, hmaSens)
+
+plot(wolfpack1, title="Wolfpack(CTF)", color=wolfpack1 > 0 ? color.lime : color.red, linewidth=2, transp=0)
+wplot2 = plot(wolfpack2, title="Wolfpack(MTF)", color= hma0[0] > hma0[1] ? color.blue : color.black, linewidth=2, transp=0)
+fill(zeroLine, wplot2, title="Wolfpack Wave", color=wolfpack2 > 0 ? color.new(color.blue, 90) : color.new(color.black, 90))
+
+BarColor = updateBarColor ? (wolfpack1 > 0 ? color.lime : color.red) : na
+barcolor(color=BarColor)
+
