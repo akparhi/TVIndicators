@@ -111,8 +111,10 @@ plotshape(yellowCross, style=shape.xcross, color=color.yellow, location=location
 alertcondition(redDiamond != 0, "Red Diamond", "Red Diamond")
 alertcondition(bloodDiamond != 0, "Blood Diamond", "Blood Diamond")
 alertcondition(redCross != 0, "RedX", "RedX")
+alertcondition(purpleDiamond != 0, "Purple Diamond", "Purple Diamond")
+alertcondition(greenCross != 0, "Green X", "Green X")
 alertcondition(longEma != 0, "EMA(11, 34) Signal", "EMA(11, 34) Signal")
-alertcondition(blueTriangle != 0, "Bluetriangle", "Bluetriangle")
+
 
 //////////////////////////////////////////////////////////////////////////
 // RF
@@ -236,3 +238,4 @@ TrendColor = emaFast > emaSlow and emaRef > emaSlow ? #00ff80 :
    emaFast < emaSlow and emaRef < emaSlow ? #ff0080 : #b2b5be
 
 plot(emaSlow, color=TrendColor, linewidth=3, transp=20, title="Colored EMA Long")
+alertcondition(TrendColor != TrendColor[1], "Long EMA trend change", "Long EMA trend change Signal")

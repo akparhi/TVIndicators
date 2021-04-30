@@ -452,11 +452,9 @@ alertcondition(cross(wolfpack, 0), 'Wolfpack Signal', 'Wolfpack Signal')
 alertcondition(buySignal, 'Buy (Big green circle)', 'Green circle WaveTrend Oversold')
 alertcondition(buySignalDiv, 'Buy (Big green circle + Div)', 'Buy & WT Bullish Divergence & WT Overbought')
 alertcondition(wtGoldBuy, 'GOLD Buy (Big GOLDEN circle)', 'Green & GOLD circle WaveTrend Overbought')
-alertcondition(sommiBullish or sommiBullishDiamond, 'Sommi bullish flag/diamond', 'Blue flag/diamond')
 alertcondition(wtCross and wtCrossUp, 'Buy (Small green dot)', 'Buy small circle')
 
 // SELL
-alertcondition(sommiBearish or sommiBearishDiamond, 'Sommi bearish flag/diamond', 'Purple flag/diamond')
 alertcondition(sellSignal, 'Sell (Big red circle)', 'Red Circle WaveTrend Overbought')
 alertcondition(sellSignalDiv, 'Sell (Big red circle + Div)', 'Buy & WT Bearish Divergence & WT Overbought')
 alertcondition(wtCross and wtCrossDown, 'Sell (Small red dot)', 'Sell small circle')
