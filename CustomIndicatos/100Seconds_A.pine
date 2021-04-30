@@ -11,14 +11,15 @@ colorMutedGreen = #00b36b
 
 
 showRange = input(false, title="Show range")
-showDc = input(false, title="Show Donchian Channel")
 //////////////////////////////////////////////////////////////////////////
 // HMA colored
 //////////////////////////////////////////////////////////////////////////
 hmaPeriod = input(14, title="HMA Period")
 hma0 = hma(close, hmaPeriod)
-plot(hma0, color= hma0[0] > hma0[1] ? colorBrightGreen : colorBrightRed, linewidth=3, title="Colored HMA")
+hmaColor = hma0[0] > hma0[1] ? colorBrightGreen : colorBrightRed
+plot(hma0, color= hmaColor, linewidth=3, title="Colored HMA")
 
+alertcondition(hmaColor != hmaColor[1], "HMA color change", "HMA color change")
 //////////////////////////////////////////////////////////////////////////
 // Cipher A
 //////////////////////////////////////////////////////////////////////////
@@ -155,72 +156,7 @@ lbandplot = plot(showRange ? lband : na, color=colorMutedRed, transp=100, title=
 fill(hbandplot, filtplot, color=colorMutedGreen, title="High Target Range", transp=90)
 fill(lbandplot, filtplot, color=colorMutedRed, title="Low Target Range", transp=90)
 
-//////////////////////////////////////////////////////////////////////////
-// Donchian Fibonacci
-//////////////////////////////////////////////////////////////////////////
-
-dftPeriod=input(24, minval=15, maxval=60, title="DFT Multiplier")
-
-//CHANNEL
-hb= highest(high, dftPeriod) //High Border
-lb = lowest(low, dftPeriod)   //Low Border
-dist = hb - lb          //range of the channel 
-med = (hb + lb)/2        //median of the channel
-
-hf = hb - dist*0.236    //Highest Fib
-chf = hb - dist*0.382    //Center High Fib
-clf = hb - dist*0.618    //Center Low Fib
-lf = hb - dist*0.764     //Lowest Fib
-
-//PULL BACK LEVELS
-//initialise mutatables
-leh=hb
-lel=lb
-hbtrue=true
-
-evpup = high>hb[1] //push up event
-evhbstart =  hb[3]==hb[2] and hb[2]==hb[1] and evpup //horizontal then up, part of evhb calculation
-evpdown = low<lb[1] //push down event
-evlbstart = lb[3]==lb[2] and lb[2]==lb[1] and evpdown //horizontal then down, part of evlb calculation
-
-//two levels will be merged in the plot
-evhb = evhbstart or high[1] == hb //event with high border
-leh := evhb? hf :leh[1] //level high mutatable set to highest fib on event or kept on value
-evlb = evlbstart or low[1] == lb  //event with low border
-lel := evlb? lf :lel[1] //level low mutatable set to lowest fib on event or kept on value
-hbtrue := evhb?true :evlb?false :hbtrue[1] //last event mutatable
-
-//ENTRY MARKERS
-//initialise mutatables
-hftrue = true
-lftrue = true
-cftrue = true
-evupin = crossover(close, hf) //market enters up trend
-evupout = crossunder(close, hf) //market leaves up trend
-hftrue := evupin? true :evupout? false :hftrue[1] //mutatable true if in up trend
-evdownin = crossunder(close, lf) //market enters down trend
-evdownout = crossover(close, lf) //market leaves down trend
-lftrue := evdownin? true :evdownout? false :lftrue[1] //mutatable true if in down trend
-cftrue := not hftrue and not lftrue? true : false    //mutatable true if instrument is ranging
-
-//IDENTIFY LAST BAR
-last= barstate.islast
-last:= barstate.isrealtime and timeframe.isintraday ? not barstate.isconfirmed : barstate.islast 
-
-//SITUATION 
-hbdtrue = last and hftrue  //up trend
-lbdtrue = last and lftrue  //down trend
-chfdtrue = last and cftrue and hbtrue //high ranging
-clfdtrue = last and cftrue and not hbtrue //low ranging
-
-//plot channel and fibzones
-phb=plot(not showDc or hbdtrue ? na : hb, title="high border", transp= 100)
-phf = plot(not showDc or hbdtrue or chfdtrue ? na : hf, title="highest fib", transp= 100)
-plf = plot(not showDc or lbdtrue or clfdtrue ? na : lf, title= "lowest fib", transp= 100)
-plb = plot(not showDc or lbdtrue ? na : lb, title="low border", transp= 100)
-
-fill(phb, phf, color= hftrue ? color.new(color.green, 70) : color.new(color.green, 92), title="up trend zone") //up trend zone, blue or transparant blue
-fill(plf, plb, color= lftrue ? color.new(color.red, 70) : color.new(color.red, 92), title="down trend zone")   //down trend zone, orange or transparant orange
+alertcondition(filtcolor != filtcolor[1], "Filter color change", "Filter color change")
 
 //////////////////////////////////////////////////////////////////////////
 // Colored EMA Long
