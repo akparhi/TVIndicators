@@ -1,0 +1,238 @@
+//@version=4
+study(title          = "100Seconds A Minimal", 
+     shorttitle      = "100Seconds_A_Minimal", 
+     overlay         = true)
+
+// CONSTANTS
+colorBrightRed = #ff0080
+colorMutedRed = #b8005d
+colorBrightGreen = #00ff80
+colorMutedGreen = #00b36b
+
+
+showRange = input(false, title="Show range")
+showDc = input(false, title="Show Donchian Channel")
+//////////////////////////////////////////////////////////////////////////
+// HMA colored
+//////////////////////////////////////////////////////////////////////////
+hmaPeriod = input(14, title="HMA Period")
+hma0 = hma(close, hmaPeriod)
+plot(hma0, color= hma0[0] > hma0[1] ? colorBrightGreen : colorBrightRed, linewidth=3, title="Colored HMA")
+
+//////////////////////////////////////////////////////////////////////////
+// Cipher A
+//////////////////////////////////////////////////////////////////////////
+EMA05       = ema(close, 05)
+EMA11       = ema(close, 11)
+EMA15       = ema(close, 15)
+EMA34       = ema(close, 34)
+
+f_wavetrend(_src, _chlen, _avg, _malen) =>
+    _esa = ema(_src, _chlen)
+    _de = ema(abs(_src - _esa), _chlen)
+    _ci = (_src - _esa) / (0.015 * _de)
+    _tci = ema(_ci, _avg)
+    _wt1 = _tci
+    _wt2 = sma(_wt1, _malen)
+    [_wt1, _wt2]
+    
+f_rsimfi(_period, _multiplier, _tf) => security(syminfo.tickerid, _tf, sma(((close - open) / (high - low)) * _multiplier, _period))
+
+// WaveTrend
+wtChannelLen = input(9, title = 'WT Channel Length')
+wtAverageLen = input(12, title = 'WT Average Length')
+wtMASource = input(hlc3, title = 'WT MA Source')
+wtMALen = input(3, title = 'WT MA Length')
+
+// WaveTrend Overbought & Oversold lines
+obLevel = input(53, title = 'WT Overbought Level 1')
+obLevel2 = input(60, title = 'WT Overbought Level 2')
+obLevel3 = input(100, title = 'WT Overbought Level 3')
+osLevel = input(-53, title = 'WT Oversold Level 1')
+osLevel2 = input(-60, title = 'WT Oversold Level 2')
+osLevel3 = input(-80, title = 'WT Oversold Level 3')
+
+// RSI
+rsiLen = input(14, title = "RSI Length")
+rsiOversold = input(30, title = 'RSI Oversold', minval = 50, maxval = 100)
+rsiOverbought = input(60, title = 'RSI Overbought', minval = 0, maxval = 50)
+
+// RSI+MFI
+rsiMFIperiod = input(60, title = 'RSI+MFI Period')
+rsiMFIMultiplier = input(150, title = 'RSI+MFI Area multiplier')
+
+// CALCULATE INDICATORS
+rsi = rsi(close, rsiLen)
+rsiMFI = f_rsimfi(rsiMFIperiod, rsiMFIMultiplier, timeframe.period)
+[wt1, wt2] = f_wavetrend(wtMASource, wtChannelLen, wtAverageLen, wtMALen)
+
+// WaveTrend Conditions
+wtOverSold = wt2 <= osLevel
+wtOverBought = wt2 >= obLevel
+wtCross = cross(wt1, wt2)
+wtCrossUp = wt2 - wt1 <= 0
+wtCrossDown = wt2 - wt1 >= 0
+
+// Signals
+longEma = crossover(EMA11, EMA34)
+redCross = crossunder(EMA05, EMA11)
+greenCross = crossover(EMA05, EMA11)
+blueTriangle = crossover(EMA11, EMA15)
+redDiamond = wtCross and wtCrossDown
+greenDiamond = wtCross and wtCrossUp
+yellowCross = redDiamond and wt2 < 45 and wt2 > osLevel3 and rsi < 30 and rsi > 15 and rsiMFI < -5
+bloodDiamond = redDiamond and redCross
+purpleDiamond = greenCross and greenDiamond
+bullCandle = open > EMA11 and open > EMA34 and (close[1] > open[1]) and (close > open) and not redDiamond and not redCross
+shortEma = crossover(EMA34, EMA11)
+
+// DRAW
+// EMA(11, 34)
+plot(EMA34, color= EMA34 < EMA11 ? color.green : color.red, linewidth=2, transp=0, title="EMA(11, 34)")
+
+// SHAPES
+plotshape(longEma, style=shape.circle, color=#00ff00, location=location.abovebar, size=size.tiny, title="Long EMA(11, 34) Signal", transp=0)
+plotshape(shortEma, style=shape.circle, color=#ff0000, location=location.abovebar, size=size.tiny, title="Short EMA(11, 34) Signal", transp=0)
+
+plotshape(bloodDiamond ? na : redCross, style=shape.xcross, color=#ff0000, location=location.abovebar, size=size.tiny, title="Red cross", transp=25)
+plotshape(bloodDiamond ? na : redDiamond, style=shape.diamond, color=#ff0000, location=location.abovebar, size=size.tiny, title="Red Diamond", transp=25)
+plotshape(bloodDiamond, style=shape.diamond, color=#ff0000, location=location.abovebar, size=size.small, title="Blood Diamond", transp=15)
+
+plotshape(blueTriangle, style=shape.triangleup, color=#0064ff, location=location.abovebar, size=size.small, title="Blue Triangle", transp=25)
+plotshape(bullCandle, style=shape.diamond, color=color.yellow, location=location.abovebar, size=size.tiny, title="Bull candle", transp=25)
+
+plotshape(purpleDiamond ? na : greenCross, style=shape.xcross, color=color.lime, location=location.belowbar, size=size.tiny, title="Green cross", transp=25)
+plotshape(purpleDiamond ? na : greenDiamond, style=shape.diamond, color=color.lime, location=location.belowbar, size=size.tiny, title="Green Diamond", transp=25)
+plotshape(purpleDiamond, style=shape.diamond, color=color.purple, location=location.belowbar, size=size.small, title="Purple Diamond", transp=15)
+
+plotshape(yellowCross, style=shape.xcross, color=color.yellow, location=location.abovebar, size=size.small, title="Yellow Cross", transp=25)
+
+// ALERTS {
+alertcondition(redDiamond != 0, "Red Diamond", "Red Diamond")
+alertcondition(bloodDiamond != 0, "Blood Diamond", "Blood Diamond")
+alertcondition(redCross != 0, "RedX", "RedX")
+alertcondition(longEma != 0, "EMA(11, 34) Signal", "EMA(11, 34) Signal")
+alertcondition(blueTriangle != 0, "Bluetriangle", "Bluetriangle")
+
+//////////////////////////////////////////////////////////////////////////
+// RF
+//////////////////////////////////////////////////////////////////////////
+per = input(defval=100, minval=1, title="RF Sampling Period")
+mult = input(defval=3.0, minval=0.1, title="RF Multiplier")
+
+// Smooth Average Range
+smoothrng(x, t, m)=>
+    wper      = (t*2) - 1
+    avrng     = ema(abs(x - x[1]), t)
+    smoothrng = ema(avrng, wper)*m
+    smoothrng
+smrng = smoothrng(close, per, mult)
+
+// Range Filter
+rngfilt(x, r)=>
+    rngfilt  = x
+    rngfilt := x > nz(rngfilt[1]) ? ((x - r) < nz(rngfilt[1]) ? nz(rngfilt[1]) : (x - r)) : ((x + r) > nz(rngfilt[1]) ? nz(rngfilt[1]) : (x + r))
+    rngfilt
+filt = rngfilt(close, smrng)
+
+// Filter Direction
+upward   = 0.0
+upward  := filt > filt[1] ? nz(upward[1]) + 1 : filt < filt[1] ? 0 : nz(upward[1])
+downward = 0.0
+downward := filt < filt[1] ? nz(downward[1]) + 1 : filt > filt[1] ? 0 : nz(downward[1])
+
+// Target Bands
+hband = filt + smrng
+lband = filt - smrng
+
+// PLOT
+filtcolor = upward > 0 ? color.blue : downward > 0 ? color.orange : color.gray
+filtplot = plot(filt, color=filtcolor, linewidth=3, title="Range Filter", transp=showRange ? 100 : 10)
+hbandplot = plot(showRange ? hband : na, color=colorMutedGreen, transp=100, title="High Target")
+lbandplot = plot(showRange ? lband : na, color=colorMutedRed, transp=100, title="Low Target")
+fill(hbandplot, filtplot, color=colorMutedGreen, title="High Target Range", transp=90)
+fill(lbandplot, filtplot, color=colorMutedRed, title="Low Target Range", transp=90)
+
+//////////////////////////////////////////////////////////////////////////
+// Donchian Fibonacci
+//////////////////////////////////////////////////////////////////////////
+
+dftPeriod=input(24, minval=15, maxval=60, title="DFT Multiplier")
+
+//CHANNEL
+hb= highest(high, dftPeriod) //High Border
+lb = lowest(low, dftPeriod)   //Low Border
+dist = hb - lb          //range of the channel 
+med = (hb + lb)/2        //median of the channel
+
+hf = hb - dist*0.236    //Highest Fib
+chf = hb - dist*0.382    //Center High Fib
+clf = hb - dist*0.618    //Center Low Fib
+lf = hb - dist*0.764     //Lowest Fib
+
+//PULL BACK LEVELS
+//initialise mutatables
+leh=hb
+lel=lb
+hbtrue=true
+
+evpup = high>hb[1] //push up event
+evhbstart =  hb[3]==hb[2] and hb[2]==hb[1] and evpup //horizontal then up, part of evhb calculation
+evpdown = low<lb[1] //push down event
+evlbstart = lb[3]==lb[2] and lb[2]==lb[1] and evpdown //horizontal then down, part of evlb calculation
+
+//two levels will be merged in the plot
+evhb = evhbstart or high[1] == hb //event with high border
+leh := evhb? hf :leh[1] //level high mutatable set to highest fib on event or kept on value
+evlb = evlbstart or low[1] == lb  //event with low border
+lel := evlb? lf :lel[1] //level low mutatable set to lowest fib on event or kept on value
+hbtrue := evhb?true :evlb?false :hbtrue[1] //last event mutatable
+
+//ENTRY MARKERS
+//initialise mutatables
+hftrue = true
+lftrue = true
+cftrue = true
+evupin = crossover(close, hf) //market enters up trend
+evupout = crossunder(close, hf) //market leaves up trend
+hftrue := evupin? true :evupout? false :hftrue[1] //mutatable true if in up trend
+evdownin = crossunder(close, lf) //market enters down trend
+evdownout = crossover(close, lf) //market leaves down trend
+lftrue := evdownin? true :evdownout? false :lftrue[1] //mutatable true if in down trend
+cftrue := not hftrue and not lftrue? true : false    //mutatable true if instrument is ranging
+
+//IDENTIFY LAST BAR
+last= barstate.islast
+last:= barstate.isrealtime and timeframe.isintraday ? not barstate.isconfirmed : barstate.islast 
+
+//SITUATION 
+hbdtrue = last and hftrue  //up trend
+lbdtrue = last and lftrue  //down trend
+chfdtrue = last and cftrue and hbtrue //high ranging
+clfdtrue = last and cftrue and not hbtrue //low ranging
+
+//plot channel and fibzones
+phb=plot(not showDc or hbdtrue ? na : hb, title="high border", transp= 100)
+phf = plot(not showDc or hbdtrue or chfdtrue ? na : hf, title="highest fib", transp= 100)
+plf = plot(not showDc or lbdtrue or clfdtrue ? na : lf, title= "lowest fib", transp= 100)
+plb = plot(not showDc or lbdtrue ? na : lb, title="low border", transp= 100)
+
+fill(phb, phf, color= hftrue ? color.new(color.green, 70) : color.new(color.green, 92), title="up trend zone") //up trend zone, blue or transparant blue
+fill(plf, plb, color= lftrue ? color.new(color.red, 70) : color.new(color.red, 92), title="down trend zone")   //down trend zone, orange or transparant orange
+
+//////////////////////////////////////////////////////////////////////////
+// Colored EMA Long
+//////////////////////////////////////////////////////////////////////////
+EMA75       = ema(close, 75)
+EMA89       = ema(close, 89)
+EMA180      = ema(close, 180)
+EMA200      = ema(close, 200)
+
+emaRef = EMA05
+emaFast = timeframe.isintraday ? timeframe.multiplier == 1 ? EMA75  : EMA89  : EMA89
+emaSlow = timeframe.isintraday ? timeframe.multiplier == 1 ? EMA180 : EMA200 : EMA200
+
+TrendColor = emaFast > emaSlow and emaRef > emaSlow ? #00ff80 : 
+   emaFast < emaSlow and emaRef < emaSlow ? #ff0080 : #b2b5be
+
+plot(emaSlow, color=TrendColor, linewidth=3, transp=20, title="Colored EMA Long")

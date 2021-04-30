@@ -1,0 +1,99 @@
+//@version=4
+study(title="100Seconds (Alt Guppy)", shorttitle="100Seconds_alt_guppy", overlay=true)
+
+// CONSTANTS
+colorBrightRed = #ff0080
+colorBrightGreen = #00ff80
+colorBrightGrey = #b2b5be
+
+//////////////////////////////////////////////////////////////////////////
+// HMA colored
+//////////////////////////////////////////////////////////////////////////
+hma0 = hma(close, 14)
+plot(hma0, color= hma0[0] > hma0[1] ? colorBrightGreen : colorBrightRed, linewidth=3, title="Colored HMA")
+
+//////////////////////////////////////////////////////////////////////////
+// Mini Guppy
+//////////////////////////////////////////////////////////////////////////
+Lookback = input(6, title="Alert Lookback Length")
+
+//Fast EMA
+ema1 = ema(close, 3)
+ema2 = ema(close, 5)
+ema3 = ema(close, 8)
+ema4 = ema(close, 10)
+ema5 = ema(close, 12)
+ema6 = ema(close, 15)
+emafast = (ema1 + ema2 + ema3 + ema4 + ema5 + ema6)
+//Slow EMA
+ema7 = ema(close, 30)
+ema8 = ema(close, 35)
+ema9 = ema(close, 40)
+ema10 = ema(close, 45)
+ema11 = ema(close, 50)
+ema12 = ema(close, 60)
+emaslow = (ema7 + ema8 + ema9 + ema10 + ema11 + ema12)
+
+//Fast EMA Color Rules
+colfastL = (ema1 > ema2 and ema2 > ema3 and ema3 > ema4 and ema4 > ema5 and ema5 > ema6)
+colfastS = (ema1 < ema2 and ema2 < ema3 and ema3 < ema4 and ema4 < ema5 and ema5 < ema6)
+//Slow EMA Color Rules
+colslowL = ema7 > ema8 and ema8 > ema9 and ema9 > ema10 and ema10 > ema11 and ema11 > ema12 
+colslowS = ema7 < ema8 and ema8 < ema9 and ema9 < ema10 and ema10 < ema11 and ema11 < ema12 
+//Fast EMA Final Color Rules
+colFinal = colfastL and ema7 > ema12 ? color.aqua : colfastS and ema7 < ema12 ? color.orange : color.gray
+//Slow EMA Final Color Rules
+colFinal2 = colslowL  ? color.lime : colslowS ? color.red : color.gray
+
+//Fast EMA Plots
+p1=plot(ema1, title="Fast EMA 1", linewidth=1, color=colFinal,transp=10)
+plot(ema2, title="Fast EMA 2", linewidth=1, color=colFinal,transp=10)
+plot(ema3, title="Fast EMA 3", linewidth=1, color=colFinal,transp=10)
+plot(ema4, title="Fast EMA 4", linewidth=1, color=colFinal,transp=10)
+plot(ema5, title="Fast EMA 5", linewidth=1, color=colFinal,transp=10)
+p2=plot(ema6, title="Fast EMA 6", linewidth=1, color=colFinal,transp=10)
+
+fill(p1,p2,color=color.silver, transp=96)
+
+//Slow EMA Plots
+p3=plot(ema7, title="Slow EMA 7", linewidth=1, color=colFinal2,transp=10)
+plot(ema8, title="Slow EMA 8", linewidth=1, color=colFinal2,transp=10)
+plot(ema9, title="Slow EMA 9", linewidth=1, color=colFinal2,transp=10)
+plot(ema10, title="Slow EMA 10", linewidth=1, color=colFinal2,transp=10)
+plot(ema11, title="Slow EMA 11", linewidth=1, color=colFinal2,transp=10)
+p4=plot(ema12, title="Slow EMA 12", linewidth=1, color=colFinal2,transp=10)
+
+fill(p3,p4, color=color.silver, transp=96)
+
+// Generate Alert Arrows
+buySwing = 0
+sellSwing = 0
+buySwing := colFinal[1] == color.gray and colFinal == color.aqua ? nz(buySwing[1]) > 0 ? buySwing[1] + 1 : 1 : 0
+sellSwing := colFinal[1] == color.gray  and colFinal == color.orange ? nz(sellSwing[1]) > 0 ? sellSwing[1] + 1 : 1 : 0
+
+
+plotshape(buySwing==1 and barssince(nz(buySwing[1], 1)==1) > Lookback ? 1 : na, title="Buy Swing", text="E", location=location.belowbar, style=shape.labelup, size=size.tiny, color=color.aqua, textcolor=color.white, transp=0)
+plotshape(sellSwing==1 and barssince(nz(sellSwing[1], 1)==1) > Lookback ? -1 : na, title="Sell Swing", text="E", location=location.abovebar, style=shape.labeldown, size=size.tiny, color=color.orange, textcolor=color.white, transp=0)
+plotshape(colFinal2[1] != color.lime and colFinal2 == color.lime ? 1 : na, title="Long Start", text="Buy", location=location.belowbar, style=shape.labelup, size=size.tiny, color=color.green, textcolor=color.white, transp=0)
+plotshape(colFinal2[1] == color.lime and colFinal2 != color.lime ? 1 : na, title="Long Stop", text="End", location=location.abovebar, style=shape.labeldown, size=size.tiny, color=color.black, textcolor=color.white, transp=0)
+plotshape(colFinal2[1] != color.red and colFinal2 == color.red ? -1 : na, title="Short Start", text="Sell", location=location.abovebar, style=shape.labeldown, size=size.tiny, color=color.red, textcolor=color.white, transp=0)
+plotshape(colFinal2[1] == color.red and colFinal2 != color.red ? 1 : na, title="Short Stop", text="End", location=location.belowbar, style=shape.labelup, size=size.tiny, color=color.black, textcolor=color.white, transp=0)
+
+alertcondition(colFinal2[1] != color.lime and colFinal2 == color.lime, "SG - Long Start", "SG - Long Start")
+alertcondition(colFinal2[1] != color.red and colFinal2 == color.red, "SG - Short Start", "SG - Short Start")
+
+
+//////////////////////////////////////////////////////////////////////////
+// Colored EMA Long
+//////////////////////////////////////////////////////////////////////////
+emaLong = ema(close, 180)
+
+TrendColor = ema12 > emaLong and ema3 > emaLong ? #00ff80 : 
+   ema12 < emaLong and ema3 < emaLong ? #ff0080 : #b2b5be
+
+plot(emaLong, color=TrendColor, linewidth=3, transp=20, title="Colored EMA Long")
+
+
+//////////////////////////////////////////////////////////////////////////
+// Signal
+//////////////////////////////////////////////////////////////////////////
