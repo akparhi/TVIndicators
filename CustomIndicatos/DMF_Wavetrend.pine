@@ -183,6 +183,11 @@ sellSignalDiv_color = wtBearDiv ? colorRed :
 // DRAW
 zLine = plot(0, color = colorGrey)
 
+// rsiMFI
+rsiMFIColor = rsiMFI > 0 ? #3ee145 : #ff3d2e
+rsiMFIplot = plot(useRsiMfi ? rsiMFI : na, title = 'RSI+MFI Area', color = rsiMFIColor, transp = 100)
+fill(rsiMFIplot, zLine, rsiMFIColor, transp = 50)
+
 //  Wolfpack BAR
 wolfpackBarTopLine = plot(-95, title = 'Wolfpack Bar TOP Line', transp = 100)
 wolfpackBarBottomLine = plot(-99, title = 'Wolfpack Bar BOTTOM Line', transp = 100)

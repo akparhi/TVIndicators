@@ -1,0 +1,236 @@
+//@version=4
+study(title          = "100Seconds A Renko", 
+     shorttitle      = "100Seconds_A_Renko", 
+     overlay         = true)
+
+// CONSTANTS
+DodgerBlue  = #1E90FF
+colorBrightRed = #ff0080
+colorMutedRed = #b8005d
+colorBrightGreen = #00ff80
+colorMutedGreen = #00b36b
+colorBrightGrey = #b2b5be
+// bar colors
+barGreen = #26a69a
+barRed = #ef5350
+barBlack = #5d606b
+weakBarGreen = color.lime
+weakBarRed = color.orange
+
+//////////////////////////////////////////////////////////////////////////
+// RF
+//////////////////////////////////////////////////////////////////////////
+rfperiod = input(defval=100, minval=1, title="RF Sampling Period")
+mult = input(defval=2.5, minval=0.1, step=0.1, title="RF Multiplier")
+
+// Fns
+smoothrng(x, t, m)=>
+    wper      = (t*2) - 1
+    avrng     = ema(abs(x - x[1]), t)
+    ema(avrng, wper)*m
+
+rngfilt(x, r)=>
+    rngfilt  = x
+    rngfilt := x > nz(rngfilt[1]) ? ((x - r) < nz(rngfilt[1]) ? nz(rngfilt[1]) : (x - r)) : ((x + r) > nz(rngfilt[1]) ? nz(rngfilt[1]) : (x + r))
+    rngfilt
+
+// Calculations
+smrng = smoothrng(close, rfperiod, mult)
+filt = rngfilt(close, smrng)
+
+// Filter Direction
+upward   = 0.0
+upward  := filt > filt[1] ? nz(upward[1]) + 1 : filt < filt[1] ? 0 : nz(upward[1])
+downward = 0.0
+downward := filt < filt[1] ? nz(downward[1]) + 1 : filt > filt[1] ? 0 : nz(downward[1])
+
+// PLOT
+filtcolor = upward > 0 ? color.blue : downward > 0 ? color.orange : color.gray
+filtplot = plot(filt, color=filtcolor, linewidth=3, title="Range Filter")
+
+alertcondition(filtcolor != filtcolor[1], "Filter color change", "Filter color change")
+
+
+//////////////////////////////////////////////////////////////////////////
+// Scalper
+//////////////////////////////////////////////////////////////////////////
+coloredBar = input(true, title="Color bars relative to PAC")
+HiLoLen = input(10, minval=2, title="High Low PAC Length")
+ShowPACexit = input(true, title="Show PAC Swing Alerts")
+considerBarDirection = input(true, title="Consider Bar Direction")
+ShowEMA12_Channel = input(true, title="Show EMA 12 Channel")
+ShowEMA36_Ribbon = input(true, title="Show EMA 36 Ribbon")
+showFastEMA = input(false, title="Show fast EMA")
+showSlowEMA = input(false, title="Show slow EMA")
+
+// FUNCTIONS 
+maColor(maBase, ma, maRef) =>
+      change(ma) >= 0 and maBase > maRef ? DodgerBlue
+     : change(ma) < 0 and maBase > maRef ? color.maroon
+     : change(ma) <= 0 and maBase < maRef ? color.red
+     : change(ma) >= 0 and maBase < maRef ? color.blue
+     : color.gray
+
+// Price action channel
+pacC        = ema(close, HiLoLen)
+pacL        = ema(low, HiLoLen)
+pacU        = ema(high, HiLoLen)
+
+// All other EMAs
+EMA05       = ema(close, 05)
+EMA11       = ema(close, 11)
+EMA12       = ema(close, 12)
+EMA15       = ema(close, 15)
+EMA18       = ema(close, 18)
+EMA21       = ema(close, 21)
+EMA24       = ema(close, 24)
+EMA27       = ema(close, 27)
+EMA30       = ema(close, 30)
+EMA33       = ema(close, 33)
+EMA34       = ema(close, 34)
+EMA36       = ema(close, 36)
+EMA75       = ema(close, 75)
+EMA89       = ema(close, 89)
+EMA180      = ema(close, 180)
+EMA200      = ema(close, 200)
+EMA540      = ema(close, 540)
+EMA633      = ema(close, 633)
+
+// Colour bars according to the close position relative to the PAC selected.
+bColour = close >= pacU ? barGreen : close <= pacL ? barRed : barBlack
+if(bColour == barGreen) 
+    bColour := close > open ? barGreen : weakBarGreen
+if(bColour == barRed) 
+    bColour := close < open ? barRed : weakBarRed
+
+barcolor(coloredBar ? bColour : na, title = "Bar Colours")
+
+// Draw the EMA12 ribbon
+ema05=plot(ShowEMA12_Channel ? EMA05 : na,  color=color.blue, linewidth=1, transp=92, title="EMA05")
+ema11=plot(ShowEMA12_Channel ? EMA11:na,  color=color.blue, linewidth=1, transp=92, title="EMA11")
+fill(ema05, ema11, color=color.blue, transp=95, title="Fill EMA5-12")
+
+// If this is the 1min Time Frame select 15* EMAs
+emaFast   = timeframe.isintraday ? timeframe.multiplier == 1 ? EMA75  : EMA89  : EMA89
+emaMedium = timeframe.isintraday ? timeframe.multiplier == 1 ? EMA180 : EMA200 : EMA200
+emaSlow   = timeframe.isintraday ? timeframe.multiplier == 1 ? EMA540 : EMA633 : EMA633
+TrendDirection = emaFast > emaMedium and pacC > emaMedium ? 1 : 
+   emaFast < emaMedium and pacC < emaMedium ? -1 : 0
+TrendeColor = TrendDirection == 1 ? colorBrightGreen : 
+   TrendDirection == -1 ? colorBrightRed : colorBrightGrey
+
+plot(showFastEMA ? emaFast : na,  color=color.green, linewidth=3, transp=20, title="EMA fast")
+plot(emaMedium, color=TrendeColor, linewidth=3, transp=20, title="EMA medium")
+plot(showSlowEMA ? emaSlow : na, color=color.black, linewidth=3, transp=20, title="EMA slow")
+
+// Draw the EMA36 ribbon
+plot( ShowEMA36_Ribbon ? EMA12 : na, color=maColor(EMA12, EMA12, EMA36), title="MA12", linewidth=2, transp=20)
+plot( ShowEMA36_Ribbon ? EMA15 : na, color=maColor(EMA12, EMA15, EMA36), title="MA15", linewidth=1, transp=20)
+plot( ShowEMA36_Ribbon ? EMA18 : na, color=maColor(EMA12, EMA18, EMA36), title="MA18", linewidth=1, transp=20)
+plot( ShowEMA36_Ribbon ? EMA21 : na, color=maColor(EMA12, EMA21, EMA36), title="MA21", linewidth=1, transp=20)
+plot( ShowEMA36_Ribbon ? EMA24 : na, color=maColor(EMA12, EMA24, EMA36), title="MA24", linewidth=2, transp=20)
+plot( ShowEMA36_Ribbon ? EMA27 : na, color=maColor(EMA12, EMA27, EMA36), title="MA27", linewidth=1, transp=20)
+plot( ShowEMA36_Ribbon ? EMA30 : na, color=maColor(EMA12, EMA30, EMA36), title="MA30", linewidth=1, transp=20)
+plot( ShowEMA36_Ribbon ? EMA33 : na, color=maColor(EMA12, EMA33, EMA36), title="MA33", linewidth=1, transp=20)
+plot( ShowEMA36_Ribbon ? EMA36 : na, color=maColor(EMA12, EMA36, EMA36), title="MA36", linewidth=2, transp=20)
+
+// PLOT & ALERTS
+barUp = true
+barDown = true
+barUp := considerBarDirection ? close >= open : true
+barDown := considerBarDirection ? close <= open : true
+isup =    close > open and close > pacU and close[1] < pacU[1]
+isdown =  close < open and close < pacL and close[1] > pacL[1]
+
+// Check have alert
+up_alert = 0
+dn_alert = 0
+up_alert := isup  ? na(up_alert[1]) ? 1 : up_alert[1] + 1 : 0
+dn_alert := isdown ? na(dn_alert[1]) ? 1 : dn_alert[1] + 1 : 0
+
+plotarrow(ShowPACexit ? barUp and up_alert[1]==1 ? 1 : barDown and dn_alert[1]==1 ? -1 : na : na, colorup=color.green, colordown=color.red, transp=20, minheight=10,maxheight=60, title="SCALPSWING Alert Arrows")
+
+alertcondition(barUp and up_alert==1, title="SCAPSWING alert Up", message="SWING_UP")
+alertcondition(barDown and dn_alert==1, title="SCAPSWING alert Down", message="SWING_DN")
+
+
+//////////////////////////////////////////////////////////////////////////
+// Cipher A
+//////////////////////////////////////////////////////////////////////////
+f_wavetrend(_src, _chlen, _avg, _malen) =>
+    _esa = ema(_src, _chlen)
+    _de = ema(abs(_src - _esa), _chlen)
+    _ci = (_src - _esa) / (0.015 * _de)
+    _tci = ema(_ci, _avg)
+    _wt1 = _tci
+    _wt2 = sma(_wt1, _malen)
+    [_wt1, _wt2]
+    
+f_rsimfi(_period, _multiplier, _tf) => security(syminfo.tickerid, _tf, sma(((close - open) / (high - low)) * _multiplier, _period))
+
+// WaveTrend
+wtChannelLen = input(9, title = 'WT Channel Length')
+wtAverageLen = input(12, title = 'WT Average Length')
+wtMASource = input(hlc3, title = 'WT MA Source')
+wtMALen = input(3, title = 'WT MA Length')
+
+// WaveTrend Overbought & Oversold lines
+obLevel = input(53, title = 'WT Overbought Level 1')
+obLevel2 = input(60, title = 'WT Overbought Level 2')
+obLevel3 = input(100, title = 'WT Overbought Level 3')
+osLevel = input(-53, title = 'WT Oversold Level 1')
+osLevel2 = input(-60, title = 'WT Oversold Level 2')
+osLevel3 = input(-80, title = 'WT Oversold Level 3')
+
+// RSI
+rsiLen = input(14, title = "RSI Length")
+
+// RSI+MFI
+rsiMFIperiod = input(60, title = 'RSI+MFI Period')
+rsiMFIMultiplier = input(150, title = 'RSI+MFI Area multiplier')
+
+// CALCULATE INDICATORS
+rsi = rsi(close, rsiLen)
+rsiMFI = f_rsimfi(rsiMFIperiod, rsiMFIMultiplier, timeframe.period)
+[wt1, wt2] = f_wavetrend(wtMASource, wtChannelLen, wtAverageLen, wtMALen)
+
+// WaveTrend Conditions
+wtOverSold = wt2 <= osLevel
+wtOverBought = wt2 >= obLevel
+wtCross = cross(wt1, wt2)
+wtCrossUp = wt2 - wt1 <= 0
+wtCrossDown = wt2 - wt1 >= 0
+
+// Signals
+longEma = crossover(EMA11, EMA34)
+redCross = crossunder(EMA05, EMA11)
+greenCross = crossover(EMA05, EMA11)
+redDiamond = wtCross and wtCrossDown
+greenDiamond = wtCross and wtCrossUp
+yellowCross = redDiamond and wt2 < 45 and wt2 > osLevel3 and rsi < 30 and rsi > 15 and rsiMFI < -5
+bloodDiamond = redDiamond and redCross
+purpleDiamond = greenCross and greenDiamond
+shortEma = crossover(EMA34, EMA11)
+
+// DRAW
+// SHAPES
+plotshape(longEma, style=shape.circle, color=#00ff00, location=location.abovebar, size=size.tiny, title="Long EMA(11, 34) Signal", transp=0)
+plotshape(shortEma, style=shape.circle, color=#ff0000, location=location.abovebar, size=size.tiny, title="Short EMA(11, 34) Signal", transp=0)
+
+plotshape(bloodDiamond ? na : redCross, style=shape.xcross, color=#ff0000, location=location.abovebar, size=size.tiny, title="Red cross", transp=25)
+plotshape(bloodDiamond ? na : redDiamond, style=shape.diamond, color=#ff0000, location=location.abovebar, size=size.tiny, title="Red Diamond", transp=25)
+plotshape(bloodDiamond, style=shape.diamond, color=#ff0000, location=location.abovebar, size=size.small, title="Blood Diamond", transp=15)
+
+plotshape(purpleDiamond ? na : greenCross, style=shape.xcross, color=color.lime, location=location.belowbar, size=size.tiny, title="Green cross", transp=25)
+plotshape(purpleDiamond ? na : greenDiamond, style=shape.diamond, color=color.lime, location=location.belowbar, size=size.tiny, title="Green Diamond", transp=25)
+plotshape(purpleDiamond, style=shape.diamond, color=color.purple, location=location.belowbar, size=size.small, title="Purple Diamond", transp=15)
+
+plotshape(yellowCross, style=shape.xcross, color=color.yellow, location=location.abovebar, size=size.small, title="Yellow Cross", transp=25)
+
+// ALERTS {
+alertcondition(redDiamond != 0, "Red Diamond", "Red Diamond")
+alertcondition(bloodDiamond != 0, "Blood Diamond", "Blood Diamond")
+alertcondition(redCross != 0, "RedX", "RedX")
+alertcondition(purpleDiamond != 0, "Purple Diamond", "Purple Diamond")
+alertcondition(greenCross != 0, "Green X", "Green X")
+alertcondition(longEma != 0, "EMA(11, 34) Signal", "EMA(11, 34) Signal")

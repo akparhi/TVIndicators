@@ -1,0 +1,208 @@
+//@version=4
+strategy(title="100Seconds NNFX Strategy V1", overlay = true, pyramiding=0, initial_capital=10000, currency=currency.USD, calc_on_order_fills=0, default_qty_type=strategy.percent_of_equity, default_qty_value=100, commission_value = 0.04)
+
+// CONSTANTS
+colorBrightRed = #ff0080
+colorBrightGreen = #00ff80
+
+///////////////////////////////////////////////////
+// Entry conditions
+///////////////////////////////////////////////////
+// *** RSI **
+
+
+// *** Wavetrend ***
+wtChannelLen = input(9, title = 'WT Channel Length')
+wtAverageLen = input(12, title = 'WT Average Length')
+wtMASource = input(hlc3, title = 'WT MA Source')
+wtMALen = input(3, title = 'WT MA Length')
+
+f_wavetrend(_src, _chlen, _avg, _malen) =>
+    _esa = ema(_src, _chlen)
+    _de = ema(abs(_src - _esa), _chlen)
+    _ci = (_src - _esa) / (0.015 * _de)
+    _tci = ema(_ci, _avg)
+    _wt1 = _tci
+    _wt2 = sma(_wt1, _malen)
+    [_wt1, _wt2]
+
+[wt1, wt2] = f_wavetrend(wtMASource, wtChannelLen, wtAverageLen, wtMALen)
+
+wtBuy = crossover(wt1, wt2)
+
+// Test EMA system
+EMA05       = ema(close, 5) 
+EMA11       = ema(close, 11) 
+EMA34       = ema(close, 34)
+EMA75       = ema(close, 75)
+EMA180      = ema(close, 180)
+
+TrendColor = EMA75 > EMA180 and EMA05 > EMA180 ? colorBrightGreen : 
+   EMA75 < EMA180 and EMA05 < EMA180 ? colorBrightRed : #b2b5be
+plot(EMA180, color=TrendColor, linewidth=3, transp=20, title="Colored EMA Long")
+plot(EMA34, color= EMA34 < EMA11 ? color.green : color.red, linewidth=2, transp=0, title="EMA(11, 34)")
+
+
+// SG sIgnal
+s = 0
+s  := s[1] ? s[1] : 0
+if (EMA11 > EMA34)
+    s := 1
+if (EMA11 < EMA34)
+    s := -1
+
+///////////////////////////////////////////////////
+// Period
+///////////////////////////////////////////////////
+startDate = input(title="Start Date", type=input.integer,
+     defval=1, minval=1, maxval=31)
+startMonth = input(title="Start Month", type=input.integer,
+     defval=1, minval=1, maxval=12)
+startYear = input(title="Start Year", type=input.integer,
+     defval=2021, minval=1800, maxval=2100)
+
+endDate = input(title="End Date", type=input.integer,
+     defval=1, minval=1, maxval=31)
+endMonth = input(title="End Month", type=input.integer,
+     defval=1, minval=1, maxval=12)
+endYear = input(title="End Year", type=input.integer,
+     defval=2030, minval=1800, maxval=2100)
+
+inDateRange = (time >= timestamp(syminfo.timezone, startYear,
+         startMonth, startDate, 0, 0)) and
+     (time < timestamp(syminfo.timezone, endYear, endMonth, endDate, 0, 0))
+
+///////////////////////////////////////////////////
+//Rules Implemented:
+///////////////////////////////////////////////////
+// - SL ATR x 2.5
+// - TP1 ATR x 2.5 x 1
+// - TP2 ATR x 2.5 x 2
+///////////////////////////////////////////////////
+// configs
+///////////////////////////////////////////////////
+
+useLong = input(title="Take longs", defval = true)
+useShort = input(title="Take shorts", defval = false)
+
+useLiveAtr = input(title="Use Live ATR(can repaint TPs)", defval = true)
+atrPeriod = input(title="ATR Period", defval=14, minval=1)
+atr = atr(atrPeriod)
+
+useLeveledSl = input(title="Use leveled stoploss", defval = true)
+useTslInStage3 = input(title="Use trailing stoploss in stage 3", defval = false)
+useSl = input(title="Use stoploss", defval = true)
+useTp = input(title="Use take profit", defval = false)
+useTp2 = input(title="Use Tp2", defval = true)
+
+slMult = input(title="Stop Loss (x*ATR)",type=input.float, minval=0.1, maxval=100, step=0.1, defval=2.5, confirm=false)
+tp1Mult = input(title="TP1 (x*SL)",type=input.float, minval=0.1, maxval=100, step=0.1, defval=1, confirm=false)
+tp2Mult = input(title="TP2 (x*SL)",type=input.float, minval=0.1, maxval=100, step=0.1, defval=2, confirm=false)
+tp1 = input(title="TP1 amount (equity * %TP1)", type=input.float, minval=10, maxval=45, step=1, defval=20)
+tp2 = input(title="TP2 amount (equity * %TP2)", type=input.float, minval=10, maxval=45, step=1, defval=30)
+
+
+
+///////////////////////////////////////////////////
+// Strategy Execution
+///////////////////////////////////////////////////
+longCondition = s[1] <= 0 and s > 0 
+longExitCondition = s[1] > 0 and s <= 0
+
+shortCondition = s[1] >= 0 and s < 0 
+shortExitCondition = s[1] < 0 and s >= 0
+
+strategy.close("Long", longExitCondition)
+strategy.close("Short", shortExitCondition)
+if (inDateRange and useLong and longCondition)
+    strategy.entry("Long", strategy.long)
+if (inDateRange and useShort and shortCondition)
+    strategy.entry("Short", strategy.short)
+
+
+// Stoploss calculation
+float positionAtr = na
+positionAtr := positionAtr[1] ? positionAtr[1] : na
+if (longCondition or shortCondition)
+    positionAtr := atr
+atrFinal = useLiveAtr ? atr : positionAtr
+
+float tsl = na
+stopdist = atrFinal * slMult
+tsl := tsl[1] and stopdist ? (strategy.position_size > 0 ? max(tsl[1], close - stopdist) : min(tsl[1], close + stopdist)) : na
+if (longCondition)
+    tsl := close - stopdist
+if (shortCondition)
+    tsl := close + stopdist
+
+tp1dist = atrFinal * slMult * tp1Mult
+tp2dist = atrFinal * slMult * tp2Mult
+
+float stoploss = na
+
+// stepped TSL
+curProfitInPts() =>
+    if strategy.position_size > 0
+        high - strategy.position_avg_price
+    else if strategy.position_size < 0
+        strategy.position_avg_price - low
+    else
+        0
+
+isDirectionSame = sign(s) == sign(s[1])
+getCurrentStage() =>
+    var stage = 0
+    if strategy.position_size == 0 or not isDirectionSame
+        stage := 0
+    if stage == 0 and strategy.position_size != 0
+        stage := 1
+    else if stage == 1 and curProfitInPts() >= tp1dist
+        stage := 2
+    else if stage == 2 and curProfitInPts() >= tp2dist
+        stage := 3
+    stage
+
+curStage = getCurrentStage()
+if useLeveledSl
+    if curStage == 1
+        stoploss := isDirectionSame and stoploss[1] ? stoploss[1] : tsl
+    else if curStage == 2
+        if (curStage[1] == 1)
+            stoploss := tsl
+        else
+            stoploss := isDirectionSame and stoploss[1] ? stoploss[1] : tsl
+    else if curStage == 3
+        if (useTslInStage3 or curStage[1] == 2)
+            stoploss := tsl
+        else
+            stoploss := isDirectionSame and stoploss[1] ? stoploss[1] : tsl
+else
+    stoploss := tsl
+
+
+// Exits
+if(useTp and useSl)
+    strategy.exit("TP1", from_entry="Long", qty_percent = tp1, limit = strategy.position_avg_price + tp1dist, stop=stoploss)
+    if(useTp2)
+        strategy.exit("TP2", from_entry="Long", qty_percent = tp2, limit = strategy.position_avg_price + tp2dist, stop=stoploss)
+    strategy.exit("Exit long", from_entry="Long", stop=stoploss)
+    strategy.exit("TP1", from_entry="Short", qty_percent = tp1, limit = strategy.position_avg_price - tp1dist, stop=stoploss)
+    if(useTp2)
+        strategy.exit("TP2", from_entry="Short", qty_percent = tp2, limit = strategy.position_avg_price - tp2dist, stop=stoploss)
+    strategy.exit("Exit short", from_entry="Short", stop=stoploss)
+else
+    if(useSl)
+        strategy.exit("Exit long", from_entry="Long", stop=stoploss)
+        strategy.exit("Exit short", from_entry="Short", stop=stoploss)
+    if(useTp)
+        strategy.exit("TP1", from_entry="Long", qty_percent = tp1, limit = strategy.position_avg_price + tp1dist)
+        if(useTp2)
+            strategy.exit("TP2", from_entry="Long", qty_percent = tp2, limit = strategy.position_avg_price + tp2dist)
+        strategy.exit("TP1", from_entry="Short", qty_percent = tp1, limit = strategy.position_avg_price - tp1dist)
+        if(useTp2)
+            strategy.exit("TP2", from_entry="Short", qty_percent = tp2, limit = strategy.position_avg_price - tp2dist)
+
+
+// plot trailing stop
+plot(useSl and stoploss and strategy.position_size ? stoploss : na, style=plot.style_linebr, color = strategy.position_size > 0 ? colorBrightRed : colorBrightGreen)
+plot(useSl and curStage == 3 ? tsl : na, style=plot.style_linebr)
